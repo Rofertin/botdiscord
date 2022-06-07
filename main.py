@@ -13,24 +13,23 @@ from datetime import date
 import discord
 from discord import channel
 from discord.ext import commands
-import os
 from PIL import Image, ImageDraw, ImageFont
 from discord.ext.commands import context
+from discord.ext.commands import CommandNotFound
 from discord.ext.commands.errors import PrivateMessageOnly
 from discord.ext.commands.help import HelpCommand
 from discord.ext.commands import Bot
 from googleapiclient.discovery import build
 import random
-import json
-import youtube_dl
 from extra_functions import *
 
 client = commands.Bot(command_prefix=".", help_command= None)
 api_key = "AIzaSyCsPj0Mb3F4Vf9AyFeZj4UkOr1wl2SKeg4"
 
 @client.event
-async def on_ready():
+async def on_ready():    
     print('Buenas, soy agustin bot')
+
 
 @client.event
 async def on_message(message):
@@ -41,74 +40,22 @@ async def on_message(message):
 
     if message.author == client.user:
         return   
+        
+    if (message.content.startswith('.') and message.content.find("..") == -1):
+        await client.process_commands(message)
 
-    if message.content.find("ty bot" ) != -1 or message.content.find("gracias bot" ) != -1 or message.content.find("thank you bot" ) != -1:
+    elif(message.content.find("kapp") != -1 or message.content.find("Kapp") != -1):    
+        kappa_counter(message)
+
+    elif (message.content.find("ty bot" ) != -1 or message.content.find("gracias bot" ) != -1 or message.content.find("thank you bot" ) != -1):
         await message.channel.send("de nada pa, besos en la cola")
-    """
-    if message.content.find(":kappa:") != -1:
-        diccionario = leer_dic_csv(message)
-        print(message.content)
-        imprimir_csv(message,diccionario)
-    if message.content.find(":kapponic:" ) != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":KappaPeek:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kappasad:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kappOk:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":rakappa:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kappabird:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kappahand:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":zilkappa:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kapping:") != -1:
-        diccionario = leer_dic_csv(message)
-    if message.content.find(":kappapride:") != -1:
-        diccionario = leer_dic_csv(message)
-    """   
-    
-    await client.process_commands(message)
-       
 
-    #if message.content.find(".play") != -1:
-    #    await message.channel.send("*El pajero de mi programador no me programo para eso todavía*")
+@client.command(aliases = ["kapasstats","kappatats","kappastats","kappstats","kappa"])
+async def kapastats(ctx):
+    with open("dependencias/kappa_counter.json", "r+") as jsonfile:
+            diccionario = json.load(jsonfile)
 
-
-@client.command(aliases = ["serverisopen"]) 
-async def serverisonline(ctx):
-    username = ctx.message.author
-    if str(username) == "agustín#6300":
-        with open("dependencias/serverstatus.txt","w") as txt:
-            txt.write("OPEN\n")
-        await ctx.send("SERVER ONLINE PUTASSSSS")
-    else:
-        await ctx.send("No sos agustín pa")
-
-@client.command()
-async def serverisoffline(ctx):
-    username = ctx.message.author
-    if str(username) == "agustín#6300":
-        with open("dependencias/serverstatus.txt","w") as txt:
-            txt.write("CLOSED\n")
-        await ctx.send("nos vemos otro día, server cerrado")
-    else:
-        await ctx.send("No sos agustín pa")
-
-@client.command()
-async def serverstatus(ctx):
-    with open("dependencias/serverstatus.txt","r") as txt:
-        status = lector_server_txt(txt)
-        if status == "OPEN":
-            await ctx.send("MC server online")
-        elif status == "CLOSED":
-            await ctx.send("MC server offline")
-        else: 
-            await ctx.send("No estoy seguro,") 
-            await ctx.send("el boludo de agustín se olvidó cambiar el status")
+    await ctx.send(diccionario)
 
 @client.command()
 async def registrar_cumpleaños(ctx, *mensaje):
@@ -159,6 +106,7 @@ async def proximo_cumpleaños(ctx):
         resultado = fecha_hoy - fecha
     await ctx.send("La función está en desarrollo.")
 
+
 @client.command()
 async def borrar_cumpleaños(ctx, *mensaje):
     server_name = get_server_name(ctx, ".txt")
@@ -168,10 +116,12 @@ async def borrar_cumpleaños(ctx, *mensaje):
     
     await ctx.send("Borrado con éxito.")
 
+
 @client.command()
 async def ordenar_cumpleaños(ctx):
     server_name = get_server_name(ctx, ".txt")
     await ctx.send("En desarrollo...")
+
 
 @client.command()
 async def editar_cumpleaños(ctx):
@@ -179,6 +129,49 @@ async def editar_cumpleaños(ctx):
     dic_cumpleaños = lector_diccionario_txt(server_name)
     print(dic_cumpleaños)
     await ctx.send("Función todavía en desarrollo")
+
+
+@client.command(aliases=["td", "tiempo_hasta", "th"])
+async def tiempo_desde(ctx, *datos):
+    if(len(datos) != 3):
+        await ctx.send("Error, el formato es: dia mes año")
+        return
+    
+    datos_num = []
+    for dato in datos:
+        if not dato.isdigit():
+            await ctx.send("Error, el formato es: dia mes año")
+            return
+        else:
+            datos_num.append(int(dato))
+    
+    error = False
+    if (datos_num[0] < 0 or datos_num[0] > 31):
+        error = True
+    if (datos_num[1] < 0 or datos_num[1] > 12):
+        error = True
+    if (datos_num[2] < 0 ):
+        error = True
+    if(error):
+        await ctx.send("Fecha invalida")
+        return
+    
+    fecha_x = date(datos_num[2],datos_num[1],datos_num[0])
+    fecha_hoy = date.today()
+    fecha_delta = fecha_hoy - fecha_x
+    
+    dias = int(str(fecha_delta).split()[0])
+    if (dias < -365 or dias > 365):
+        años = int(dias//365.25)
+    else: 
+        años = 0
+    dias_finales = dias - int(365.25*años)
+
+    if(dias > 0):
+        await ctx.send(f"pasaron {años} años y {dias_finales} días desde {datos_num[0]}-{datos_num[1]}-{datos_num[2]}")
+    else: 
+        await ctx.send(f"falta {años*-1} años y {dias_finales*-1} días para {datos_num[0]}-{datos_num[1]}-{datos_num[2]}")
+
 
 @client.command(aliases=["whotfis","whois","who","whatis"])
 async def showpic(ctx, *, search= "No ingresaste texto"):
@@ -206,36 +199,68 @@ async def showpic(ctx, *, search= "No ingresaste texto"):
 async def help(ctx):
     embed1 = discord.Embed(title="Lista de comandos terminados:")
     embed1.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-    embed1.add_field(name=".whotfis .who .whatis", value="Usa CustomSearchAPI de google para buscar imagenes, su input es .whotfis busqueda", inline=False)
-    embed1.add_field(name=".sum", value="regresa la suma de todos los numeros separados por espacio.", inline=True)
-    embed1.add_field(name=".prom", value="regresa su promedio.", inline=True)
+    embed1.add_field(name=".whotfis .who .whatis", value="Usa CustomSearchAPI de google para buscar imagenes, su input es .whotfis busqueda, DESHABILITADO PORQUE ME DA PAJA LA API DE GOOGLE", inline=False)
+    embed1.add_field(name=".sum .prom y .resta", value="regresa la operacion de todos los numeros separados por espacio.", inline=True)
+    embed1.add_field(name=".emanuel", value="Literalmente emanuel.", inline=True)
     embed1.add_field(name=".conic", value="literalmente conic", inline=True)
-    embed1.add_field(name=".impuesto", value="regresa su valor en impuestos, valor actual 65%", inline=True)
+    embed1.add_field(name=".impuesto", value="regresa su valor en impuestos, valor actual 66%", inline=True)
     embed1.add_field(name=".ran", value="regresa un valor aleatorio de todo item separado por espacio.", inline=True)
     embed1.add_field(name=".conictexto", value="literalmente conic texto", inline=True)
-    embed1.add_field(name=".puntosteam", value="devuelve su valor en pesos/puntos depende el valor ingresado", inline=True)
-    embed2 = discord.Embed(title = "BetaStatus")
-    embed2.add_field(name="En progreso:", value="contador de kappa, cumpleaños.", inline=False)
-    embed2.add_field(name="Planes futuros:", value="Reproductor youtube, cronometro, Juego pingpong.", inline=False)
-    await ctx.send(embed=embed1)
-    await ctx.send(embed=embed2)
+    embed1.add_field(name=".convertir_tiempo", value="devuelve en gmt-3 depende la hora dada con su zona, ej 12:00 pst", inline=True)
+    embed1.add_field(name=".kappastats", value="devuelve el contador de kappas", inline=True) 
 
-@client.command()
+    #embed2 = discord.Embed(title = "BetaStatus")
+    #embed2.add_field(name="En progreso:", value="contador de kappa, cumpleaños.", inline=False)
+    #embed2.add_field(name="Planes futuros:", value="si", inline=False)
+    await ctx.send(embed=embed1)
+    #await ctx.send(embed=embed2)
+
+
+@client.command(aliases = ["time_converter","gmt"])
+async def convertir_tiempo(ctx, *datos:str):
+    zonas = ["gmt","utc","pst", "cet", "est"]
+    if(len(datos) != 2 or datos[1].lower() not in zonas):
+        await ctx.send("Error, el formato correcto es -> .convertir_tiempo 11:30 utc ")
+    else:
+        aux = datos[0]
+        aux = aux.split(':')
+        hora = int(aux[0])
+        minutos = int(aux[1])
+        if(minutos < 10):
+            minutos = f"0{minutos}"
+        
+        if(datos[1].lower() == "gmt" or datos[1].lower() == "utc"):
+            await ctx.send(f"{hora}:{minutos} {datos[1]} -> {hora-3}:{minutos} UTC-3 (buenos aires)")
+        elif (datos[1].lower() == "pst"):
+            await ctx.send(f"{hora}:{minutos} {datos[1]} -> {hora+5}:{minutos} UTC-3 (buenos aires)")
+        elif (datos[1].lower() == "est"):
+            await ctx.send(f"{hora}:{minutos} {datos[1]} -> {hora+2}:{minutos} UTC-3 (buenos aires)")
+        elif (datos[1].lower() == "cet"):
+            await ctx.send(f"{hora}:{minutos} {datos[1]} -> {hora-4}:{minutos} UTC-3 (buenos aires)")
+
+@client.command(alisases=["suma"])
 async def sum(ctx, *num:float):
     value = 0
     for n in num:
         value += n
     await ctx.send(value)
 
+@client.command(alisases=["substract"])
+async def resta(ctx, *num:float):
+    value = num[0]
+    for n in num[1:]:
+        value -= n
+    await ctx.send(value)
+
 @client.command(aliases=["impuestos", "imp","argentinizame"])
 async def impuesto(ctx, num):
-    impuesto = 1.65
+    impuesto = 1.66
     try:
-        await ctx.send(f"Sería {round(float(num)*impuesto,3)} con un impuesto de {round((impuesto-1)*100)}%")
+        await ctx.send(f"Sería {round(float(num)*impuesto,2)}:mate: con un impuesto de {round((impuesto-1)*100)}%")
     except ValueError:
         num = num.split(",")
         num = num[0]+"."+num[1]
-        await ctx.send(f"Sería {round(float(num)*impuesto,3)} con un impuesto de {round((impuesto-1)*100)}%")
+        await ctx.send(f"Sería {round(float(num)*impuesto,2)}:mate: con un impuesto de {round((impuesto-1)*100)}% ")
 
 @client.command()
 async def prom(ctx, *num:float):
@@ -250,6 +275,7 @@ async def prom(ctx, *num:float):
 @client.command(aliases = ["puntos"])
 async def puntosteam(ctx,valor:str,num:float=None):
     # 104 puntos = 100 ars
+    await ctx.send("Función OUTDATED ya que la conversión se volvió simple (101 puntos-> 100 ars)")
     peso = ("PESO","PESOS")
     puntos = ("PUNTOS","PUNTO")
     if valor.upper() in peso:
@@ -276,10 +302,15 @@ async def ran(ctx, *element):
 @client.command()
 async def conic(ctx):
     #Proyectos\botdiscord\874.png
-    file = discord.File("874.png")
+    file = discord.File("dependencias/874.png")
     embed = discord.Embed()
     embed.set_image(url="attachment://874.png")
     await ctx.send(file=file, embed=embed)
+
+
+@client.command(aliases=["retarded"])
+async def emanuel(ctx):
+    await ctx.send(file = discord.File("dependencias/emanuel.png"))
 
 @client.command(aliases=["conictext", "conicsez","conictexto"])
 async def conicsays(ctx,*,oracion = "No ingresaste texto"):
@@ -310,35 +341,22 @@ async def erase(ctx, number):
 
 @client.command()
 async def online(ctx):
-    #cambiar a reacción '👍'
     await ctx.send("👍")
 
 @client.command()
 async def letspeedup(ctx):
     await ctx.send("https://youtu.be/5PyWmpQvkiM?t=6")
 
-@client.command(aliases = ["sisi","SISI","si_si"])
+@client.command(aliases = ["sisi","SISI","si_si", "si si"])
 async def SI_SI(ctx):
     await ctx.send(file= discord.File("dependencias/SI_SI.mp3"))
 
-"""
-@client.event
-async def on_message(message):
-    if message.content.startswith('$thumb'):
-        channel = message.channel
-        await channel.send('Send me that 👍 reaction, mate')
-
-        def check(reaction, user):
-            return user == message.author and str(reaction.emoji) == '👍'
-
-        try:
-            reaction, user = await client.wait_for('reaction_add', timeout=60.0, check=check)
-        except asyncio.TimeoutError:
-            await channel.send('👎')
-        else:
-            await channel.send('👍')
-"""
-
+@client.event 
+async def on_command_error(ctx, error): 
+    if isinstance(error, commands.CommandNotFound): 
+        await ctx.send("Comando no encontrado...")
+        await ctx.send("Usá .help")
+        
 
 client.run('NDI5OTk0OTk1OTI0MDc0NDk3.WsDeCw.qxx57GV0RjX-T9S64HFkq_RiBuk')
 

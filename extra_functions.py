@@ -1,3 +1,5 @@
+import json
+
 def get_server_name(ctx, extension):
     lista_car_invalidos = ("?","(",")","-","¿",".",",","¿")
     server_name = ctx.message.guild.name
@@ -7,8 +9,6 @@ def get_server_name(ctx, extension):
     server_name = server_name.replace(" ","_")
     server_name = (server_name+extension).replace(" ","")
     return server_name
-
-
 
 def lector_csv(archivo):
     FIN_ARCHIVO = ""
@@ -84,4 +84,28 @@ def imprimir_csv(message, diccionario):
         for kappa in diccionario:
             csv.write(f"{str(kappa)},{str((int(diccionario[kappa])+1))}")
 
-        
+def kappa_counter(message):    
+    with open("dependencias\kappa_counter.json", "r+") as jsonfile:
+        diccionario = json.load(jsonfile)
+        diccionario_kappa(message, diccionario)
+        jsonfile.seek(0)
+        json.dump(diccionario, jsonfile)
+        jsonfile.truncate()
+
+def diccionario_kappa(message, diccionario):   
+    lista_nombres = (":kappa:", ":kapponic:", ":KappaPeek:", ":kappasad:", ":kappOk:", ":rakappa:", ":kappabird:", ":kappahand:", ":zilkappa:", ":kapping:", ":kappapride:", ":kappahammer:")
+    
+    string = str(message.content)
+
+    for nombre in lista_nombres:
+        if nombre in string:
+            diccionario[nombre] += 1
+            diccionario["total"] += 1
+            return
+
+def atoi(string):
+    res = 0
+    for i in range(len(string)):
+        res = res * 10 + (ord(string[i]) - ord('0'))
+  
+    return res
